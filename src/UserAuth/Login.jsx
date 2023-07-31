@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./Login.css";
 import GoogleButton from "react-google-button";
 import { Link, useNavigate } from "react-router-dom";
@@ -9,8 +9,47 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { logIn, googleSignIn } = useUserAuth();
+  const { logOut, logIn, googleSignIn } = useUserAuth();
   const navigate = useNavigate();
+
+  const [loggedIn, setLoggedIn] = useState(true);
+
+  const checkForInactivity = () => {
+    const expireTime = localStorage.getItem("expireTime");
+    if (expireTime && expireTime < Date.now()) {
+      logOut();
+      navigate("/");
+      console.log("Log Out");
+      setLoggedIn(false);
+    }
+  };
+
+  const updateExpireTime = () => {
+    const expireTime = Date.now() + 60000; // 60000 milliseconds = 1 minute
+    localStorage.setItem("expireTime", expireTime);
+  };
+
+  useEffect(() => {
+    updateExpireTime();
+    const interval = setInterval(() => {
+      checkForInactivity();
+    }, 5000); // Check for inactivity every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("click", updateExpireTime);
+    window.addEventListener("keypress", updateExpireTime);
+    window.addEventListener("scroll", updateExpireTime);
+    window.addEventListener("mousemove", updateExpireTime);
+
+    return () => {
+      window.removeEventListener("click", updateExpireTime);
+      window.removeEventListener("keypress", updateExpireTime);
+      window.removeEventListener("scroll", updateExpireTime);
+      window.removeEventListener("mousemove", updateExpireTime);
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
