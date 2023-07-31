@@ -1,0 +1,12 @@
+.about-text {
+  padding-top: 100px;
+}
+.about-p {
+  width: 100%;
+}
+
+@media screen and (max-width: 768px) {
+  .about-text {
+    padding-top: 50px;
+  }
+}
