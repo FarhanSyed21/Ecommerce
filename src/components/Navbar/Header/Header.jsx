@@ -2,8 +2,10 @@ import Cart from "../../Cart/Cart";
 import "./Header.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useUserAuth } from "../../../UserAuthContext";
+import { useEffect, useState } from "react";
 
 const Header = () => {
+  const [loggedIn, setLoggedIn] = useState(true);
   const { logOut } = useUserAuth();
   const navigate = useNavigate();
   const handleLogOut = async () => {
@@ -15,6 +17,44 @@ const Header = () => {
       console.log(err.message);
     }
   };
+
+  const checkForInactivity = () => {
+    const expireTime = localStorage.getItem("expireTime");
+    if (expireTime && expireTime < Date.now()) {
+      logOut();
+      navigate("/");
+      console.log("Log Out");
+      setLoggedIn(false);
+    }
+  };
+
+  const updateExpireTime = () => {
+    const expireTime = Date.now() + 6000;
+    localStorage.setItem("expireTime", expireTime);
+  };
+
+  useEffect(() => {
+    updateExpireTime();
+    const interval = setInterval(() => {
+      checkForInactivity();
+    }, 5000); // Check for inactivity every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("click", updateExpireTime);
+    window.addEventListener("keypress", updateExpireTime);
+    window.addEventListener("scroll", updateExpireTime);
+    window.addEventListener("mousemove", updateExpireTime);
+
+    return () => {
+      window.removeEventListener("click", updateExpireTime);
+      window.removeEventListener("keypress", updateExpireTime);
+      window.removeEventListener("scroll", updateExpireTime);
+      window.removeEventListener("mousemove", updateExpireTime);
+    };
+  }, []);
+
   const cartElements = [
     {
       title: "Colors",
